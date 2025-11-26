@@ -12,7 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const apiBase = (import.meta as any).env?.VITE_API_URL || "";
+  const trimmedBase = apiBase && apiBase.endsWith("/") ? apiBase.slice(0, -1) : apiBase;
+  const fullUrl = trimmedBase ? `${trimmedBase}${url}` : url;
+
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,

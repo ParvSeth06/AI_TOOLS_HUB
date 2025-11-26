@@ -8,6 +8,7 @@ import express, {
 } from "express";
 
 import { registerRoutes } from "./routes";
+import cors from "cors";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -21,6 +22,17 @@ export function log(message: string, source = "express") {
 }
 
 export const app = express();
+
+// CORS: allow the frontend to call this API. Set ALLOW_ORIGIN to a comma-separated
+// list of allowed origins (e.g. https://my-frontend.vercel.app). If not set,
+// CORS will allow all origins (useful for quick testing but not recommended
+// for production).
+const allowOriginEnv = process.env.ALLOW_ORIGIN;
+const corsOptions = {
+  origin: allowOriginEnv ? allowOriginEnv.split(",").map(s => s.trim()) : true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 declare module 'http' {
   interface IncomingMessage {
@@ -86,11 +98,12 @@ export default async function runApp(
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  const listenOptions: any = { port, host: "0.0.0.0" };
+  if (process.platform !== "win32") {
+    listenOptions.reusePort = true;
+  }
+
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
   });
 }
